@@ -4,6 +4,12 @@
 #include "Application.h"
 #include "Camera.h"
 
+#include <PxPhysicsAPI.h>
+#include <PxScene.h>
+#include <pvd/PxVisualDebugger.h>
+
+using namespace physx;
+
 class PhysicsDemoScene : public Application
 {
 public:
@@ -12,12 +18,34 @@ public:
 	virtual bool update();
 	virtual void draw();
 
+	//physics
+	void setupPhysX();
+	void updatePhysX(float dt);
+
+	void setupVisualDebugger();
+
+	//tutorials
+	void setupTutorial();
+
+
 public:		
+	//graphics
 	FlyCamera m_camera;
+	mat4 projection2D;
 
 	glm::vec2 m_screen_size;
 
-	mat4 projection2D;
+	//physics
+	PxFoundation* g_PhysicsFoundation;
+	PxPhysics* g_Physics;
+	PxScene* g_PhysicsScene;
+	PxDefaultErrorCallback g_DefaultErrorCallback;
+	PxDefaultAllocator g_DefaultAllocator;
+	PxSimulationFilterShader g_DefaultFilterShader = PxDefaultSimulationFilterShader;
+	PxMaterial* g_PhysicsMaterial;
+	PxMaterial* g_boxMaterial;
+	PxCooking* g_PhysicsCooker;
+
 
 
 };
