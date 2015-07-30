@@ -8,6 +8,8 @@
 #include <PxScene.h>
 #include <pvd/PxVisualDebugger.h>
 
+#include <vector>
+
 using namespace physx;
 
 class PhysicsDemoScene : public Application
@@ -24,8 +26,17 @@ public:
 
 	void setupVisualDebugger();
 
+	//Widgets
+	void addWidget(PxShape* shape, PxRigidActor* actor);
+	void addBox(PxShape* pShape, PxRigidActor* actor);
+	void addSphere(PxShape* pShape, PxRigidActor* actor);
+
 	//tutorials
 	void setupTutorial();
+
+
+	//shoot
+	void shootSphere();
 
 
 public:		
@@ -45,6 +56,11 @@ public:
 	PxMaterial* g_PhysicsMaterial;
 	PxMaterial* g_boxMaterial;
 	PxCooking* g_PhysicsCooker;
+
+	std::vector<PxRigidActor*> g_PhysXActors;
+
+	//input
+	bool mouse1State_last = false;
 
 
 
