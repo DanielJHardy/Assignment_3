@@ -21,6 +21,21 @@
     <Filter Include="Source Files\External">
       <UniqueIdentifier>{119bf59b-929c-445f-ab42-1f554a25e3b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Actors">
+      <UniqueIdentifier>{21e5c4b5-84ec-4a17-b8e4-a414a1dc72be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Actors\FBXActor">
+      <UniqueIdentifier>{0bc41f9d-7a60-4691-b694-bd83e3ede1d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utility">
+      <UniqueIdentifier>{36111020-5a7d-4d89-b3ea-19d8ea91620c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utility\ShaderLoading">
+      <UniqueIdentifier>{3d600309-a16f-4aed-8681-d83ec897b42e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders">
+      <UniqueIdentifier>{ceb64390-96d1-444b-bb56-df60fe88a732}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -41,6 +56,12 @@
     <ClCompile Include="src\PhysicsDemoScene.cpp">
       <Filter>Source Files\Application</Filter>
     </ClCompile>
+    <ClCompile Include="src\FBXActor.cpp">
+      <Filter>Source Files\Actors\FBXActor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShaderLoading.cpp">
+      <Filter>Source Files\Utility\ShaderLoading</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h">
@@ -58,5 +79,25 @@
     <ClInclude Include="src\gl_core_4_4.h">
       <Filter>Source Files\External</Filter>
     </ClInclude>
+    <ClInclude Include="src\FBXActor.h">
+      <Filter>Source Files\Actors\FBXActor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\glm_includes.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shader_data_objects.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShaderLoading.h">
+      <Filter>Source Files\Utility\ShaderLoading</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\shaders\textured_vertex.glsl">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="data\shaders\textured_fragment.glsl">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

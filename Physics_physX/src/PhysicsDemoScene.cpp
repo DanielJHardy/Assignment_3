@@ -65,8 +65,8 @@ bool PhysicsDemoScene::startup()
 	setupVisualDebugger();
 
 	//tutorials
-	setupTutorial();
-
+	//setupTutorial();
+	setupCollisionHierachies();
 
 
 	glfwSetTime(0.0);
@@ -142,6 +142,10 @@ bool PhysicsDemoScene::update()
 void PhysicsDemoScene::draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	//draw tank
+	m_tank->Render((float*)&m_camera.view_proj);
 
 
 	//draw grid
@@ -257,6 +261,12 @@ void PhysicsDemoScene::setupTutorial()
 	g_PhysXActors.push_back(dynamicActor2);
 
 
+}
+
+void PhysicsDemoScene::setupCollisionHierachies()
+{
+	m_tank = new FBXActor();
+	m_tank->Init("./data/models/soulspear.fbx");
 }
 
 void PhysicsDemoScene::shootSphere()

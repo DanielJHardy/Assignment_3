@@ -10,6 +10,8 @@
 
 #include <vector>
 
+#include "FBXActor.h"
+
 using namespace physx;
 
 class PhysicsDemoScene : public Application
@@ -33,6 +35,7 @@ public:
 
 	//tutorials
 	void setupTutorial();
+	void setupCollisionHierachies();
 
 
 	//shoot
@@ -61,6 +64,8 @@ public:
 
 	//input
 	bool mouse1State_last = false;
+
+	FBXActor* m_tank;
 
 
 
