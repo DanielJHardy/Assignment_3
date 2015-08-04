@@ -121,7 +121,7 @@ bool PhysicsDemoScene::update()
 	}
 
 	//check if mouse was pressed down on this frame
-	bool mouse1State = glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_1);
+	bool mouse1State = (bool)glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_1);
 	if (mouse1State && !mouse1State_last)
 	{
 		shootSphere();
@@ -145,7 +145,7 @@ void PhysicsDemoScene::draw()
 
 
 	//draw tank
-	m_tank->Render((float*)&m_camera.view_proj);
+	m_model->Render((float*)&m_camera.view_proj);
 
 
 	//draw grid
@@ -191,6 +191,19 @@ void PhysicsDemoScene::updatePhysX(float dt)
 	while (g_PhysicsScene->fetchResults() == false)
 	{
 		//dont need to do anything yet but have ot fetch results
+	}
+
+	//update all models with collision shapes
+	for (auto actor : g_PhysXActors)
+	{
+		if (actor->userData != nullptr)
+		{
+			PxMat44 m = actor->getGlobalPose();
+			mat4 M = *((mat4*)(&m));	//cast to glm matrix
+
+			FBXActor* mesh = (FBXActor*)actor->userData;
+			mesh->m_world = M;	//set position
+		}
 	}
 
 	//Add widgets to represent all the physX actors which are in the scene
@@ -252,7 +265,7 @@ void PhysicsDemoScene::setupTutorial()
 
 	//add a sphere
 	PxSphereGeometry sphere(2);
-	PxTransform transform2(PxVec3(0, 5, 0.2));
+	PxTransform transform2(PxVec3(0.0f, 5.0f, 0.2f));
 	PxRigidDynamic* dynamicActor2 = PxCreateDynamic(*g_Physics, transform2, sphere, *g_PhysicsMaterial, density);
 
 	//add it to the PhysX scene
@@ -265,8 +278,21 @@ void PhysicsDemoScene::setupTutorial()
 
 void PhysicsDemoScene::setupCollisionHierachies()
 {
-	m_tank = new FBXActor();
-	m_tank->Init("./data/models/soulspear.fbx");
+	//create plane for ground
+	PxTransform pose = PxTransform(PxVec3(0.0f, 0.0f, 0.0f), PxQuat(PxHalfPi*1.0f, PxVec3(0.0f, 0.0f, 1.0f)));
+	PxRigidStatic* plane = PxCreateStatic(*g_Physics, pose, PxPlaneGeometry(), *g_PhysicsMaterial);
+
+	//add it to the physX scene
+	g_PhysicsScene->addActor(*plane);
+
+	//create actor with a model
+	m_model = new FBXActor();
+	m_model->Init("./data/models/soulspear.fbx");
+	m_model->m_world[3] = vec4(0,2,0,1);
+
+	//model collision
+	m_model->createCollisionShapes(this);
+
 }
 
 void PhysicsDemoScene::shootSphere()

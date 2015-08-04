@@ -2,6 +2,8 @@
 
 #include "ShaderLoading.h"
 
+#include "PhysicsDemoScene.h"
+
 FBXActor::FBXActor() {}
 FBXActor::~FBXActor() {}
 
@@ -18,6 +20,43 @@ bool FBXActor::Init(const char* a_filename)
 
 	//shader program
 	return CreateShaderProgram("./data/shaders/textured_vertex.glsl", nullptr, "./data/shaders/textured_fragment.glsl", &m_program);
+}
+
+void FBXActor::createCollisionShapes(PhysicsDemoScene *a_app)
+{
+	float density = 300;
+
+	//pole
+	PxBoxGeometry box = PxBoxGeometry(0.1f,4,0.1f);
+	PxTransform transform(*((PxMat44*)(&m_world)));	//cast from glm to PhysX matrices
+
+	PxRigidDynamic* dynamicActor = PxCreateDynamic(*a_app->g_Physics, transform, box, *a_app->g_PhysicsMaterial, density);
+
+	dynamicActor->userData = this;	//set the user data to point at this FBXActor class
+
+	//offset
+	int nShapes = dynamicActor->getNbShapes();
+	PxShape* shapes;
+	dynamicActor->getShapes(&shapes, nShapes);
+
+	PxTransform relativePose = PxTransform(PxVec3(0.0f,4.0f,0.0f));
+	shapes->setLocalPose(relativePose);
+
+	//head
+	box = PxBoxGeometry(0.8f,0.5f,0.3f);
+	relativePose = PxTransform(PxVec3(0.0f,2.0f,0.0f));
+	PxShape* shape = dynamicActor->createShape(box, *a_app->g_PhysicsMaterial);
+	if (shape)
+	{
+		shape->setLocalPose(relativePose);
+	}
+
+	PxRigidBodyExt::updateMassAndInertia(*dynamicActor, (PxReal)density);
+
+	//add to scene
+	a_app->g_PhysicsScene->addActor(*dynamicActor);
+	a_app->g_PhysXActors.push_back(dynamicActor);
+
 }
 
 void FBXActor::Update(float a_dt)

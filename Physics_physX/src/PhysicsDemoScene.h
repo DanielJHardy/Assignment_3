@@ -65,7 +65,7 @@ public:
 	//input
 	bool mouse1State_last = false;
 
-	FBXActor* m_tank;
+	FBXActor* m_model;
 
 
 

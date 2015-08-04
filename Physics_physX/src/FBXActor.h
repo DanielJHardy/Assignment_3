@@ -9,6 +9,8 @@
 
 #include "Camera.h"
 
+class PhysicsDemoScene;
+
 class FBXActor
 {
 public:
@@ -16,6 +18,7 @@ public:
 	~FBXActor();
 
 	bool Init(const char* a_filename);
+	void createCollisionShapes(PhysicsDemoScene *a_app);
 
 	void Update(float a_dt);
 	void Render(float* a_viewProj);
@@ -32,15 +35,11 @@ public:
 	//shader program
 	unsigned int m_program;
 
-private:
 	//world transform
 	mat4 m_world;
 
 	//should draw debug collision shapes
 	//bool m_drawCollisions;
-
-
-
 
 };
 
