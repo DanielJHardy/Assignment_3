@@ -34,6 +34,43 @@ private:
 
 };
 
+class MyControllerHitReport : public PxUserControllerHitReport
+{
+public:
+	//overload onShapeHit function
+	virtual void onShapeHit(const PxControllerShapeHit &hit);
+
+	//other collision functions which we must overload
+		//these handle collision with other controllers and hitting obstacles
+	virtual void onControllerHit(const PxControllersHit &hit){}; 		//Called when current controller hits another controller.
+
+	virtual void onObstacleHit(const PxControllerObstacleHit &hit) { };	//Called when current controller hits a user defined obstacle
+
+	MyControllerHitReport() : PxUserControllerHitReport() { };
+
+	PxVec3 getPlayerContactNormal(){ return _playerContactNormal; }
+	void clearPlayerContactNormal(){ _playerContactNormal = PxVec3(0, 0, 0); }
+
+	PxVec3 _playerContactNormal;
+};
+
+void MyControllerHitReport::onShapeHit(const PxControllerShapeHit &hit)
+{
+	//gets a reference to a structure which tells us what has been hit and where
+	//get the actor from the shape we hit
+	PxRigidActor* actor = hit.shape->getActor();
+
+	//get the normal of the thing we hit and store it so the player controller can respond correctly
+	_playerContactNormal = hit.worldNormal;
+
+	//try to cast to a dynamic actor
+	PxRigidDynamic* myActor = actor->is<PxRigidDynamic>();
+	if (myActor != nullptr)
+	{
+		//this is where we can apply forces to things we hit
+	}
+}
+
 
 bool PhysicsDemoScene::startup()
 {
@@ -66,7 +103,7 @@ bool PhysicsDemoScene::startup()
 
 	//tutorials
 	//setupTutorial();
-	setupCollisionHierachies();
+	setupPlayerController();
 
 
 	glfwSetTime(0.0);
@@ -143,10 +180,8 @@ void PhysicsDemoScene::draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 	//draw tank
-	m_model->Render((float*)&m_camera.view_proj);
-
+	//m_model->Render((float*)&m_camera.view_proj);
 
 	//draw grid
 	DrawGizmoGrid(50);
@@ -295,6 +330,57 @@ void PhysicsDemoScene::setupCollisionHierachies()
 
 }
 
+void PhysicsDemoScene::setupPlayerController()
+{
+	//create plane for ground
+	PxTransform pose = PxTransform(PxVec3(0.0f, 0.0f, 0.0f), PxQuat(PxHalfPi*1.0f, PxVec3(0.0f, 0.0f, 1.0f)));
+	PxRigidStatic* plane = PxCreateStatic(*g_Physics, pose, PxPlaneGeometry(), *g_PhysicsMaterial);
+
+	//add it to the physX scene
+	g_PhysicsScene->addActor(*plane);
+
+	//create capsule
+	float radius = 1.0f;
+	float halfHeight = 3.0f;
+
+	PxCapsuleGeometry capsule(radius, halfHeight);
+	PxTransform transform(PxVec3(0.0f, 5.0f, 0.0f));
+
+	PxRigidDynamic*  actor = PxCreateDynamic(*g_Physics, transform, capsule, *g_PhysicsMaterial, 200.0f);
+
+
+	g_PhysicsScene->addActor(*actor);
+
+	g_PhysXActors.push_back(actor);
+
+	//create player controller
+	MyControllerHitReport* myHitReport = new MyControllerHitReport();
+	gCharacterManager = PxCreateControllerManager(*g_PhysicsScene);
+
+	//describe our controller
+	PxCapsuleControllerDesc desc;
+	desc.height = 1.6f;
+	desc.radius = 0.4f;
+	desc.position.set(0, 0, 0);
+	desc.material = playerPhysicsMaterial;
+	desc.reportCallback = myHitReport;	//connect it to our collision detection routine
+	desc.density = 10;
+
+	//create the player controller
+	gPlayerController = gCharacterManager->createController(desc);
+
+	gPlayerController->setPosition(PxExtendedVec3(0,0,0));
+
+	//set up some variables to control our player with
+	_characterYVelocity = 0;	//initialize character velocity
+	_characterRotation = 0;		// and rotation
+	_playerGravity = -0.5f;		//setup the player gravity
+	myHitReport->clearPlayerContactNormal();	//initialize the contact normal (what we are in contact with)
+
+
+
+}
+
 void PhysicsDemoScene::shootSphere()
 {
 	float density = 100;
@@ -329,6 +415,9 @@ void PhysicsDemoScene::addWidget(PxShape* shape, PxRigidActor* actor)
 			break;
 		case physx::PxGeometryType::eSPHERE:
 			addSphere(shape, actor);
+			break;
+		case physx::PxGeometryType::eCAPSULE:
+			addCapsule(shape, actor);
 			break;
 		default:
 			break;
@@ -402,6 +491,38 @@ void PhysicsDemoScene::addSphere(PxShape* pShape, PxRigidActor* actor)
 
 	//create Gizmo
 	Gizmos::addSphereFilled(position, radius, 12, 12, colour, &rotation);
+}
+
+void PhysicsDemoScene::addCapsule(PxShape* pShape, PxRigidActor* actor)
+{
+	PxCapsuleGeometry geometry;
+	float radius = 1;
+	float halfHeight = 1;
+
+	//get the geometry for this PhysX collision volume
+	bool status = pShape->getCapsuleGeometry(geometry);
+	if (status)
+	{
+		radius = geometry.radius;
+		halfHeight = geometry.halfHeight;
+	}
+
+	//position
+	PxTransform pose = actor->getGlobalPose();
+	vec3 position = vec3(pose.p.x, pose.p.y, pose.p.z);
+
+	//rotation
+	glm::quat q = glm::quat(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
+	mat4 rotation = mat4(q);
+
+	//colour
+	vec4 colour = vec4(1, 0, 0, 1);
+
+	if (actor->getName() != nullptr && strcmp(actor->getName(), "Pickup1"))	 //pickups are green
+		colour = vec4(0, 1, 0, 1);
+
+	//create Gizmo
+	Gizmos::addCapsule(position, (halfHeight * 2) + (2 * radius), radius, 12, 12, colour, &rotation);
 }
 
 void DrawGizmoGrid(int a_size)

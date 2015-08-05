@@ -32,10 +32,12 @@ public:
 	void addWidget(PxShape* shape, PxRigidActor* actor);
 	void addBox(PxShape* pShape, PxRigidActor* actor);
 	void addSphere(PxShape* pShape, PxRigidActor* actor);
+	void addCapsule(PxShape* pShape, PxRigidActor* actor);
 
 	//tutorials
 	void setupTutorial();
 	void setupCollisionHierachies();
+	void setupPlayerController();
 
 
 	//shoot
@@ -67,7 +69,14 @@ public:
 
 	FBXActor* m_model;
 
+	//
+	PxControllerManager* gCharacterManager;
+	PxMaterial* playerPhysicsMaterial;
+	PxController* gPlayerController;
 
+	float _characterYVelocity;
+	float _characterRotation;
+	float _playerGravity;
 
 };
 
