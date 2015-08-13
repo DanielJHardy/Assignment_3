@@ -202,8 +202,10 @@ void PhysicsDemoScene::setupPhysX()
 
 	PxInitExtensions(*g_Physics);
 
-	//create physics material
+	//create physics materials
 	g_PhysicsMaterial = g_Physics->createMaterial(0.5f, 0.5f,0.2f);
+
+	playerPhysicsMaterial = g_Physics->createMaterial(0.5f,0.5f,0.3f);
 
 	//create physics scene	
 	PxSceneDesc sceneDesc(g_Physics->getTolerancesScale());
@@ -227,6 +229,9 @@ void PhysicsDemoScene::updatePhysX(float dt)
 	{
 		//dont need to do anything yet but have ot fetch results
 	}
+
+	//update player controller
+	updatePlayerController(dt);
 
 	//update all models with collision shapes
 	for (auto actor : g_PhysXActors)
@@ -342,25 +347,24 @@ void PhysicsDemoScene::setupPlayerController()
 	//create capsule
 	float radius = 1.0f;
 	float halfHeight = 3.0f;
-
+	
 	PxCapsuleGeometry capsule(radius, halfHeight);
-	PxTransform transform(PxVec3(0.0f, 5.0f, 0.0f));
-
+	PxTransform transform(PxVec3(3.0f, 5.0f, 0.0f));
+	
 	PxRigidDynamic*  actor = PxCreateDynamic(*g_Physics, transform, capsule, *g_PhysicsMaterial, 200.0f);
-
-
+	
 	g_PhysicsScene->addActor(*actor);
-
+	
 	g_PhysXActors.push_back(actor);
 
 	//create player controller
-	MyControllerHitReport* myHitReport = new MyControllerHitReport();
+	myHitReport = new MyControllerHitReport();
 	gCharacterManager = PxCreateControllerManager(*g_PhysicsScene);
 
 	//describe our controller
 	PxCapsuleControllerDesc desc;
-	desc.height = 1.6f;
-	desc.radius = 0.4f;
+	desc.height = 3.0f;
+	desc.radius = 0.6f;
 	desc.position.set(0, 0, 0);
 	desc.material = playerPhysicsMaterial;
 	desc.reportCallback = myHitReport;	//connect it to our collision detection routine
@@ -369,7 +373,7 @@ void PhysicsDemoScene::setupPlayerController()
 	//create the player controller
 	gPlayerController = gCharacterManager->createController(desc);
 
-	gPlayerController->setPosition(PxExtendedVec3(0,0,0));
+	gPlayerController->setPosition(PxExtendedVec3(0,1.5f,0));
 
 	//set up some variables to control our player with
 	_characterYVelocity = 0;	//initialize character velocity
@@ -377,6 +381,69 @@ void PhysicsDemoScene::setupPlayerController()
 	_playerGravity = -0.5f;		//setup the player gravity
 	myHitReport->clearPlayerContactNormal();	//initialize the contact normal (what we are in contact with)
 
+	g_PhysXActors.push_back(gPlayerController->getActor());
+
+}
+
+void PhysicsDemoScene::updatePlayerController(float dt)
+{
+	bool onGround;
+	float movementSpeed = 10.0f;
+	float rotationSpeed = 3.0f;
+
+	//check for contact normal
+	//if y is greater then 0.3 we assume this is sollid ground.
+	if (myHitReport->getPlayerContactNormal().y > 0.3f)
+	{
+		_characterYVelocity = -0.1f;
+		onGround = true;
+	}
+	else
+	{
+		_characterYVelocity += _playerGravity * dt;
+		onGround = false;
+	}
+
+	myHitReport->clearPlayerContactNormal();
+
+	const PxVec3 up(0,1,0);
+
+	//scan the keys and setup our intended velocity based on our global transform
+	PxVec3 velocity(0, _characterYVelocity, 0);
+	if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		velocity.x -= movementSpeed * dt;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		velocity.x += movementSpeed * dt;
+	}
+
+	if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		_characterRotation += rotationSpeed * dt;
+	}
+
+	if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		_characterRotation -= rotationSpeed * dt;
+	}
+
+	if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		_characterYVelocity = 10.0f;
+		velocity.y - 10.0f;
+	}
+
+	//To do.. add code to control z movement and jumping
+
+	float minDistance = 0.001f;
+	PxControllerFilters filter;
+	//make controls relative to player facing
+	PxQuat rotation(_characterRotation, up);
+	
+	//move the controller
+	gPlayerController->move(rotation.rotate(velocity), minDistance, dt, filter);
 
 
 }

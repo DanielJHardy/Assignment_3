@@ -14,6 +14,8 @@
 
 using namespace physx;
 
+class MyControllerHitReport;
+
 class PhysicsDemoScene : public Application
 {
 public:
@@ -37,7 +39,9 @@ public:
 	//tutorials
 	void setupTutorial();
 	void setupCollisionHierachies();
+
 	void setupPlayerController();
+	void updatePlayerController(float dt);
 
 
 	//shoot
@@ -73,6 +77,7 @@ public:
 	PxControllerManager* gCharacterManager;
 	PxMaterial* playerPhysicsMaterial;
 	PxController* gPlayerController;
+	MyControllerHitReport* myHitReport;
 
 	float _characterYVelocity;
 	float _characterRotation;
